@@ -36,8 +36,8 @@
 				<include name=".settings/**/*" />
 				<include name="src/**/*" />
 				<include name="lib/**/*.jar" />
-				<include name="build/**/*.jar" />
-				<exclude name="**/.svn" />
+				<include name="data/**/*" />
+				<exclude name="**/.hg" />
 			</fileset>
 		</zip>
 	</target>
@@ -48,25 +48,31 @@
 				<fileset dir="deploy">
 					<include name="*.jar" />
 				</fileset>
-				<fileset dir="lib">
-					<include name="*.jar" />
-				</fileset>
 				<fileset dir="">
 					<include name="*.txt" />
 				</fileset>
 			</zip>
 		</target>
 	
-	<target name="create_jar" depends="compile" description="generate the main jar">
+	<target name="unzip_lib" depends="compile" description="Unzips the itext jar">
+		<unzip src="${libs}/iText-2.1.4.jar" dest="${deploy}">
+			<patternset>
+		        <include name="com/lowagie/text/**/*"/>
+		    </patternset>
+		</unzip>
+	</target>
+	
+	<target name="create_jar" depends="unzip_lib,compile" description="generate the main jar">
 		<tstamp />
 		<jar jarfile="${deploy}/pdfmeta_${DSTAMP}.jar" basedir="classes">
+			<fileset dir="${classes}" includes="**/*"/>
+			<fileset dir="${deploy}" includes="com/**/*"/>
+			
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Implementation-Vendor" value="BTR" />
 				<attribute name="Implementation-Title" value="PDF Meta" />
 				<attribute name="Implementation-Version" value="${DSTAMP}" />
-
-				<attribute name="Class-Path" value="iText-2.1.4.jar" />
 				<attribute name="Main-Class" value="com.btr.pdfmeta.Main" />
 			</manifest>
 		</jar>
