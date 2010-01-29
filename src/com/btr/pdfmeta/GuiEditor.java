@@ -83,26 +83,26 @@ public class GuiEditor extends JFrame {
 		
 		gc.gridx = 0; gc.gridy = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING;
 		centerPanel.add(new JLabel(Messages.getString("GuiEditor.author")), gc); //$NON-NLS-1$
-		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING;
+		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0;
 		centerPanel.add(this.authorField = new JTextField(metadata.get("Author"), 20), gc); //$NON-NLS-1$
 	
-		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING;
+		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0;
 		centerPanel.add(new JLabel(Messages.getString("GuiEditor.title")), gc); //$NON-NLS-1$
-		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING;
+		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0;
 		centerPanel.add(this.titleField = new JTextField(metadata.get("Title"), 20), gc); //$NON-NLS-1$
 
-		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING;
+		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0;
 		centerPanel.add(new JLabel(Messages.getString("GuiEditor.subject")), gc); //$NON-NLS-1$
-		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING;
+		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0;
 		centerPanel.add(this.subjectField = new JTextField(metadata.get("Subject"), 20), gc); //$NON-NLS-1$
 
-		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING;
+		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0;
 		centerPanel.add(new JLabel(Messages.getString("GuiEditor.keywords")), gc); //$NON-NLS-1$
 		
-		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING;
+		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0;
 		centerPanel.add(this.keywordsField = new JTextField(metadata.get("Keywords"), 20), gc); //$NON-NLS-1$
 
-		gc.gridy++; gc.gridx = 0; gc.gridwidth = GridBagConstraints.REMAINDER; 
+		gc.gridy++; gc.gridx = 0; gc.gridwidth = GridBagConstraints.REMAINDER; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0; 
 		gc.anchor = GridBagConstraints.BASELINE_TRAILING;
 		JButton saveButton = new JButton(Messages.getString("GuiEditor.save")); //$NON-NLS-1$
 		saveButton.setMnemonic('S');
