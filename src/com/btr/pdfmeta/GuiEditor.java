@@ -1,6 +1,7 @@
 package com.btr.pdfmeta;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -13,15 +14,22 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
 
 import com.lowagie.text.DocumentException;
@@ -42,6 +50,9 @@ public class GuiEditor extends JFrame {
 	private JTextField titleField;
 	private JTextField subjectField;
 	private JTextField keywordsField;
+	private JCheckBox backupCheckbox;
+	private JButton saveButton;
+	private JList fileList;
 
 	private String inFileName;
 
@@ -65,16 +76,20 @@ public class GuiEditor extends JFrame {
 		
 		init();
 		
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				loadPdfFile(args);
-			}
-		});
-		
+		if (args.length == 0) {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					showFileChooser();
+				}
+			});
+		} else {
+			fillFileList(args);
+		}
 	}
 
 	/*************************************************************************
 	 * Initialize the GUI
+	 * @param files passed in as command line arguments.
 	 ************************************************************************/
 	
 	private void init() {
@@ -87,28 +102,31 @@ public class GuiEditor extends JFrame {
 		
 		gc.gridx = 0; gc.gridy = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING;
 		centerPanel.add(new JLabel(Messages.getString("GuiEditor.author")), gc); //$NON-NLS-1$
-		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0;
+		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0; gc.gridwidth = 2;
 		centerPanel.add(this.authorField = new JTextField(metadata.get("Author"), 20), gc); //$NON-NLS-1$
 	
-		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0;
+		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0; gc.gridwidth = 1;
 		centerPanel.add(new JLabel(Messages.getString("GuiEditor.title")), gc); //$NON-NLS-1$
-		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0;
+		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0; gc.gridwidth = 2;
 		centerPanel.add(this.titleField = new JTextField(metadata.get("Title"), 20), gc); //$NON-NLS-1$
 
-		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0;
+		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0; gc.gridwidth = 1;
 		centerPanel.add(new JLabel(Messages.getString("GuiEditor.subject")), gc); //$NON-NLS-1$
-		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0;
+		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0; gc.gridwidth = 2;
 		centerPanel.add(this.subjectField = new JTextField(metadata.get("Subject"), 20), gc); //$NON-NLS-1$
 
-		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0;
+		gc.gridy++; gc.gridx = 0; gc.anchor = GridBagConstraints.BASELINE_TRAILING; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0; gc.gridwidth = 1;
 		centerPanel.add(new JLabel(Messages.getString("GuiEditor.keywords")), gc); //$NON-NLS-1$
 		
-		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0;
+		gc.gridx++; gc.anchor = GridBagConstraints.BASELINE_LEADING; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0; gc.gridwidth = 2;
 		centerPanel.add(this.keywordsField = new JTextField(metadata.get("Keywords"), 20), gc); //$NON-NLS-1$
 
-		gc.gridy++; gc.gridx = 0; gc.gridwidth = GridBagConstraints.REMAINDER; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0; 
+		gc.gridy++; gc.gridx = 1; gc.gridwidth = 1;
+		centerPanel.add(backupCheckbox = new JCheckBox(Messages.getString("GuiEditor.enableBackup"), true), gc);  //$NON-NLS-1$
+		
+		gc.gridx++; gc.gridwidth = GridBagConstraints.REMAINDER; gc.fill = GridBagConstraints.NONE; gc.weightx = 0.0; 
 		gc.anchor = GridBagConstraints.BASELINE_TRAILING;
-		JButton saveButton = new JButton(Messages.getString("GuiEditor.save")); //$NON-NLS-1$
+		this.saveButton = new JButton(Messages.getString("GuiEditor.save")); //$NON-NLS-1$
 		saveButton.setMnemonic('S');
 		saveButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -116,28 +134,79 @@ public class GuiEditor extends JFrame {
 			}
 		});
 		centerPanel.add(saveButton, gc); 
-		
 		add(centerPanel, BorderLayout.CENTER);
+		
+		this.fileList = new JList();
+		this.fileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		this.fileList.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				if (e.getValueIsAdjusting() == false) {
+					loadPdfFile();
+				}
+			}
+		});
+		
+		JPanel westPanel = new JPanel(new BorderLayout());
+		westPanel.add(new JScrollPane(this.fileList), BorderLayout.CENTER);
+		westPanel.setPreferredSize(new Dimension(200, 100));
+		JButton loadButton = new JButton(Messages.getString("GuiEditor.openButton")); //$NON-NLS-1$
+		loadButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				showFileChooser();
+			}
+		});
+		westPanel.add(loadButton, BorderLayout.SOUTH);
+		add(westPanel, BorderLayout.WEST);
 		
 		pack();
 		setLocationRelativeTo(null);
 	}
+
+	/*************************************************************************
+	 * Files the files list from the given list of file names.
+	 * @param files to fill into the left side list.
+	 ************************************************************************/
+	
+	private void fillFileList(Object[] files) {
+		DefaultListModel m = new DefaultListModel();
+		for (Object f : files) {
+			String name = f.toString();
+			int index = name.lastIndexOf(File.separatorChar);
+			if (index > -1) {
+				name = name.substring(index+1);
+			}
+			index = name.lastIndexOf('.');
+			if (index > -1) {
+				name = name.substring(0, index);
+			}
+			
+			m.addElement(new ListEntry(name, f.toString()));
+		}
+		
+		this.fileList.setModel(m);	
+		if (m.size() > 0) {
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					fileList.setSelectedIndex(0);
+				}
+			}); 
+		}
+	}
 	
 	/*************************************************************************
-	 * Load the PDF info into the GUI and open the reader.
-	 * @param args command line arguments.
+	 * Load the selected PDF info into the GUI and open the reader.
 	 ************************************************************************/
+	
 	@SuppressWarnings("unchecked")
-	private void loadPdfFile(String[] args) {
+	private void loadPdfFile() {
 		this.inFileName = ""; //$NON-NLS-1$
-		if (args.length < 2) {
-			inFileName = showFileChooser();
-			if (inFileName == null) {
-				dispose();
-				return;
-			}
+		
+		boolean fileSelected = fileList.getSelectedValue() != null;
+		enableEditor(fileSelected);
+		if (fileSelected == false) {
+			return;
  		} else {
- 			inFileName = args[1];
+ 			inFileName = ((ListEntry) fileList.getSelectedValue()).getFilePath();
  		}
 
 		try {
@@ -147,6 +216,7 @@ public class GuiEditor extends JFrame {
 			
 			updateFields();
 		} catch (IOException e) {
+			enableEditor(false);
 			JOptionPane.showMessageDialog(this, e.getMessage(), 
 					Messages.getString("GuiEditor.error1"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 			e.printStackTrace();
@@ -155,11 +225,31 @@ public class GuiEditor extends JFrame {
 	}
 
 	/*************************************************************************
+	 * Enables or disables the editor fields.
+	 * @param enable 
+	 ************************************************************************/
+	
+	private void enableEditor(boolean enable) {
+		this.authorField.setEnabled(enable);
+		this.titleField.setEnabled(enable);
+		this.subjectField.setEnabled(enable);
+		this.keywordsField.setEnabled(enable);
+		this.saveButton.setEnabled(enable);
+		if (enable == false) {
+			this.authorField.setText(""); //$NON-NLS-1$
+			this.titleField.setText(""); //$NON-NLS-1$
+			this.subjectField.setText(""); //$NON-NLS-1$
+			this.keywordsField.setText(""); //$NON-NLS-1$
+		}
+	}
+
+	/*************************************************************************
 	 * Shows a file chooser to select a input PDF file.
 	 ************************************************************************/
 	
-	private String showFileChooser() {
+	private void showFileChooser() {
 		JFileChooser chooser = new JFileChooser();
+		chooser.setMultiSelectionEnabled(true);
 		chooser.setAcceptAllFileFilterUsed(true);
 		chooser.addChoosableFileFilter(new FileFilter() {
 			@Override
@@ -173,9 +263,9 @@ public class GuiEditor extends JFrame {
 			}
 		});
 		if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-			return chooser.getSelectedFile().getPath();
+			File[] files = chooser.getSelectedFiles();
+			fillFileList(files);
 		}
-		return null;
 	}
 
 	/*************************************************************************
@@ -201,8 +291,9 @@ public class GuiEditor extends JFrame {
 			this.metadata.put("Keywords", this.keywordsField.getText()); //$NON-NLS-1$
 			
 			File f = new File(inFileName);
-			String backupFile = f.getAbsolutePath()+".bak"; //$NON-NLS-1$
-			if (f.renameTo(new File(backupFile)) == false) {
+			String backupFileName = f.getAbsolutePath()+".bak"; //$NON-NLS-1$
+			File backupFile = new File(backupFileName);
+			if (f.renameTo(backupFile) == false) {
 				JOptionPane.showMessageDialog(this, Messages.getString("GuiEditor.error2")+backupFile,  //$NON-NLS-1$
 						Messages.getString("GuiEditor.error3"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 				return;
@@ -226,7 +317,11 @@ public class GuiEditor extends JFrame {
 			stamper.close();
 			fout.close();
 			
-			dispose();
+			// Delete temporary file if no backup is requested
+			if (backupCheckbox.isSelected() == false) {
+				backupFile.delete();
+			}
+			
 		} catch (DocumentException e) {
 			JOptionPane.showMessageDialog(this, e.getMessage(), 
 					Messages.getString("GuiEditor.error3"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
