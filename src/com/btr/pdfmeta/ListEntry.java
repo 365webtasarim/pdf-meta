@@ -1,5 +1,7 @@
 package com.btr.pdfmeta;
 
+import java.io.File;
+
 /*****************************************************************************
  * Small helper class to store files in the JList. 
  *
@@ -7,20 +9,30 @@ package com.btr.pdfmeta;
  ****************************************************************************/
 
 class ListEntry {
-	String name;
-	String filePath;
+	
+	private String name;
+	private String filePath;
 	
 	/*************************************************************************
 	 * Constructor
-	 * @param name
-	 * @param filePath
+	 * @param file
 	 ************************************************************************/
 	
-	public ListEntry(String name, String filePath) {
-		this.name = name;
-		this.filePath = filePath;
+	public ListEntry(String file) {
+		super();
+		
+		this.filePath = file;
+		this.name = this.filePath;
+		int index = this.name.lastIndexOf(File.separatorChar);
+		if (index > -1) {
+			this.name = this.name.substring(index+1);
+		}
+		index = this.name.lastIndexOf('.');
+		if (index > -1) {
+			this.name = this.name.substring(0, index);
+		}
 	}
-	
+
 	/*************************************************************************
 	 * toString
 	 * @see java.lang.Object#toString()

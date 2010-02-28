@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
@@ -30,8 +31,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.filechooser.FileFilter;
 
+import com.btr.pdfmeta.FileDnDSupport.FileDropListener;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.pdf.PdfReader;
 import com.lowagie.text.pdf.PdfStamper;
@@ -136,13 +137,21 @@ public class GuiEditor extends JFrame {
 		centerPanel.add(saveButton, gc); 
 		add(centerPanel, BorderLayout.CENTER);
 		
-		this.fileList = new JList();
+		this.fileList = new JList(new DefaultListModel());
 		this.fileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		this.fileList.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				if (e.getValueIsAdjusting() == false) {
 					loadPdfFile();
 				}
+			}
+		});
+		FileDnDSupport dnd = new FileDnDSupport();
+		dnd.addDropTarget(this.fileList);
+		dnd.addFileFilter(new PdfFileFilter());
+		dnd.addDropListener(new FileDropListener() {
+			public void filesDropped(List<File> fileList) {
+				addFilesToList(fileList);
 			}
 		});
 		
@@ -179,8 +188,7 @@ public class GuiEditor extends JFrame {
 			if (index > -1) {
 				name = name.substring(0, index);
 			}
-			
-			m.addElement(new ListEntry(name, f.toString()));
+			m.addElement(new ListEntry(f.toString()));
 		}
 		
 		this.fileList.setModel(m);	
@@ -251,17 +259,7 @@ public class GuiEditor extends JFrame {
 		JFileChooser chooser = new JFileChooser();
 		chooser.setMultiSelectionEnabled(true);
 		chooser.setAcceptAllFileFilterUsed(true);
-		chooser.addChoosableFileFilter(new FileFilter() {
-			@Override
-			public String getDescription() {
-				return Messages.getString("GuiEditor.filter"); //$NON-NLS-1$
-			}
-			@Override
-			public boolean accept(File f) {
-				return f.isDirectory()
-					|| f.getName().toLowerCase().endsWith(".pdf") ; //$NON-NLS-1$
-			}
-		});
+		chooser.addChoosableFileFilter(new PdfFileFilter());
 		if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
 			File[] files = chooser.getSelectedFiles();
 			fillFileList(files);
@@ -331,6 +329,21 @@ public class GuiEditor extends JFrame {
 					Messages.getString("GuiEditor.error3"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 			e.printStackTrace();
 		}
+	}
+
+	/*************************************************************************
+	 * Adds the given files to the GUI list.
+	 * @param fileList
+	 ************************************************************************/
+	
+	private void addFilesToList(List<File> fileList) {
+		DefaultListModel m = (DefaultListModel) GuiEditor.this.fileList.getModel();
+		for (File file : fileList) {
+			ListEntry e = new ListEntry(file.getPath());
+			if (m.contains(e) == false) {
+				m.addElement(e);
+			}
+		} 
 	}
 
 
