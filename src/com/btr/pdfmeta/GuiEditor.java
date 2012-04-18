@@ -218,9 +218,11 @@ public class GuiEditor extends JFrame {
  		}
 
 		try {
-			PdfReader reader = new PdfReader(new FileInputStream(inFileName));
+			FileInputStream in = new FileInputStream(inFileName);
+			PdfReader reader = new PdfReader(in);
 			this.metadata = reader.getInfo();
 			reader.close();
+			in.close();
 			
 			updateFields();
 		} catch (IOException e) {
